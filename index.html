@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katapayadi Cipher | Ancient Indian Encoding</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <div class="nav-bar">
+            <div class="logo">
+                <h2 style="color: var(--secondary);">कटपयादि</h2>
+            </div>
+            <div class="nav-links">
+                {% if not current_user.is_authenticated %}
+                    <a href="/" class="nav-link {% if page == 'home' %}active{% endif %}">Home</a>
+                    <a href="/about" class="nav-link {% if page == 'about' %}active{% endif %}">About</a>
+                    <a href="/system" class="nav-link {% if page == 'system' %}active{% endif %}">System</a>
+                    <a href="/login" class="nav-link btn-secondary {% if page == 'login' %}active{% endif %}">Login</a>
+                {% else %}
+                    <a href="/dashboard" class="nav-link {% if page == 'dashboard' %}active{% endif %}">Dashboard</a>
+                    <a href="/encode" class="nav-link {% if page == 'encode' %}active{% endif %}">Encode</a>
+                    <a href="/decode" class="nav-link {% if page == 'decode' %}active{% endif %}">Decode</a>
+                    {% if current_user.username == 'admin' %}
+                        <a href="/admin" class="nav-link {% if page == 'admin' %}active{% endif %}">Admin</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="nav-link btn-secondary">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Show content based on page -->
+        {% if page == 'login' or show_login %}
+            <!-- Login Section (Full Page) -->
+            <div class="auth-page">
+                <div class="auth-container">
+                    <div class="form-container">
+                        <h2><i class="fas fa-sign-in-alt"></i> Login to Katapayadi Cipher</h2>
+                        <form action="{{ url_for('login') }}" method="POST">
+                            <div class="form-group">
+                                <label for="username"><i class="fas fa-user"></i> Username</label>
+                                <input type="text" id="username" name="username" class="form-control" required placeholder="Enter username" autofocus>
+                            </div>
+                            <div class="form-group">
+                                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                                <input type="password" id="password" name="password" class="form-control" required placeholder="Enter password">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                        </form>
+                        
+                        <div style="text-align: center; margin-top: 20px;">
+                            <p>Don't have an account? 
+                                <a href="#" onclick="showRegisterForm()" style="color: var(--secondary); font-weight: bold;">Register here</a>
+                            </p>
+                            <a href="/" class="btn" style="margin-top: 10px;">
+                                <i class="fas fa-home"></i> Back to Home
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Register Form (Hidden by default) -->
+                    <div id="register-form" class="form-container" style="display: none; margin-top: 30px;">
+                        <h2><i class="fas fa-user-plus"></i> Create New Account</h2>
+                        <form action="{{ url_for('register') }}" method="POST">
+                            <div class="form-group">
+                                <label for="reg-username">Username</label>
+                                <input type="text" id="reg-username" name="username" class="form-control" required placeholder="Choose a username">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-password">Password</label>
+                                <input type="password" id="reg-password" name="password" class="form-control" required placeholder="Choose a secure password">
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-lg" style="width: 100%;">
+                                <i class="fas fa-user-plus"></i> Register
+                            </button>
+                        </form>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <p>Already have an account? 
+                                <a href="#" onclick="showLoginForm()" style="color: var(--secondary); font-weight: bold;">Login here</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Katapayadi Info -->
+                    <div class="form-container" style="margin-top: 30px;">
+                        <h3><i class="fas fa-info-circle"></i> About Katapayadi System</h3>
+                        <p>The Katapayadi system is an ancient Indian numerical notation and encoding system that assigns numbers to Sanskrit letters.</p>
+                        
+                        <!-- Image from provided URL -->
+                        <div style="margin: 20px 0; text-align: center;">
+                            <div style="border: var(--border-width) solid var(--primary); padding: 10px; background: var(--card-bg);">
+                                <img src="https://www.eviolinguru.com/uploads/7/3/5/7/735729/published/melakartha-ragas.jpg?1718896338" 
+                                     alt="Katapayadi System - Melakarta Ragas" 
+                                     style="max-width: 100%; height: auto; border: 2px solid var(--primary);"
+                                     onerror="this.src='https://via.placeholder.com/600x400/FF6B6B/000000?text=Katapayadi+Chart'">
+                                <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">
+                                    <i class="fas fa-image"></i> Katapayadi System used in Melakarta Ragas classification
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-guide">
+                            <h4><i class="fas fa-lightbulb"></i> Quick Guide:</h4>
+                            <ul style="padding-left: 20px;">
+                                <li>क, ट, प, य = 1</li>
+                                <li>ख, ठ, फ, र = 2</li>
+                                <li>ग, ड, ब, ल = 3</li>
+                                <li>Encryption keys add security layer (0-9)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'home' %}
+            <!-- Home Section -->
+            <div class="home-page">
+                <div class="header">
+                    <h1>KATAPAYADI CIPHER</h1>
+                    <p>Ancient Indian Encoding System • New Brutalism Interface</p>
+                </div>
+
+                <!-- Hero Section with Image -->
+                <div class="hero-section">
+                    <div class="form-container">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center;">
+                            <div>
+                                <h2>Ancient Wisdom, Modern Security</h2>
+                                <p>The Katapayadi system was used by ancient Indian mathematicians to encode numbers into Sanskrit text. Now experience this historical encoding system with modern web technology.</p>
+                                
+                                <div style="margin: 20px 0;">
+                                    <a href="/login" class="btn btn-primary btn-lg" style="margin-right: 10px;">
+                                        <i class="fas fa-sign-in-alt"></i> Login
+                                    </a>
+                                    <a href="/system" class="btn btn-secondary btn-lg">
+                                        <i class="fas fa-book"></i> Learn More
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div style="border: var(--border-width) solid var(--primary); padding: 10px; background: var(--card-bg);">
+                                <img src="https://www.eviolinguru.com/uploads/7/3/5/7/735729/published/melakartha-ragas.jpg?1718896338" 
+                                     alt="Katapayadi System - Melakarta Ragas" 
+                                     style="width: 100%; height: auto; max-height: 300px; object-fit: cover; border: 2px solid var(--primary);"
+                                     onerror="this.src='https://via.placeholder.com/600x300/4ECDC4/000000?text=Katapayadi+Encoding+System'">
+                                <p style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">
+                                    <i class="fas fa-history"></i> Katapayadi in Carnatic Music Ragas
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="dashboard-grid" style="margin-top: 30px;">
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>Secure Encoding</h3>
+                        <p>Encode Sanskrit text using the ancient Katapayadi numerical system with additional encryption keys.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-unlock"></i>
+                        </div>
+                        <h3>Key-based Security</h3>
+                        <p>Add encryption keys (0-9) for an extra layer of security. Without the key, decoding is impossible.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3>Historical System</h3>
+                        <p>Experience the encoding system used by ancient Indian mathematicians like Aryabhata.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>Modern Implementation</h3>
+                        <p>Ancient system meets modern web technology with Flask backend and New Brutalism design.</p>
+                    </div>
+                </div>
+
+                <!-- Quick Demo -->
+                <div class="form-container" style="margin-top: 30px;">
+                    <h3><i class="fas fa-play-circle"></i> Quick Demo</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                        <div>
+                            <h4>Encoding Example:</h4>
+                            <p><strong>Sanskrit:</strong> कटपयादि</p>
+                            <p><strong>Encoded (key=0):</strong> 11614</p>
+                            <p><strong>Encoded (key=3):</strong> 44947</p>
+                        </div>
+                        <div>
+                            <h4>Decoding Example:</h4>
+                            <p><strong>Numbers:</strong> 11614</p>
+                            <p><strong>Decoded (key=0):</strong> कटपयादि</p>
+                            <p><strong>Decoded (wrong key=5):</strong> ञठयवञथ (meaningless)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'dashboard' %}
+            <!-- Dashboard Section -->
+            <div class="dashboard-page">
+                <div class="header">
+                    <h2>Welcome, {{ current_user.username }}!</h2>
+                    <p>Access the Katapayadi encoding/decoding tools</p>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>Encode Text</h3>
+                        <p>Convert Sanskrit text to encrypted numbers using Katapayadi system</p>
+                        <a href="/encode" class="btn btn-primary">Go to Encoder</a>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-unlock"></i>
+                        </div>
+                        <h3>Decode Numbers</h3>
+                        <p>Decode encrypted numbers back to Sanskrit text with correct key</p>
+                        <a href="/decode" class="btn btn-primary">Go to Decoder</a>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3>Katapayadi System</h3>
+                        <p>Learn about the ancient Indian encoding algorithm and its history</p>
+                        <a href="/system" class="btn btn-secondary">Learn More</a>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <h3>Visual Reference</h3>
+                        <p>View the Katapayadi chart and understand the mapping system</p>
+                        <button onclick="showKatapayadiImage()" class="btn btn-secondary">View Chart</button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="form-container" style="margin-top: 30px;">
+                    <h3><i class="fas fa-clock"></i> Getting Started</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                        <div>
+                            <h4>Encoding Steps:</h4>
+                            <ol style="padding-left: 20px;">
+                                <li>Go to Encode page</li>
+                                <li>Enter Sanskrit text</li>
+                                <li>Set encryption key (0-9)</li>
+                                <li>Click Encode</li>
+                                <li>Save the encoded numbers and key</li>
+                            </ol>
+                        </div>
+                        <div>
+                            <h4>Decoding Steps:</h4>
+                            <ol style="padding-left: 20px;">
+                                <li>Go to Decode page</li>
+                                <li>Enter encoded numbers</li>
+                                <li>Enter the correct key</li>
+                                <li>Click Decode</li>
+                                <li>View the original Sanskrit text</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'encode' %}
+            <!-- Encode Section -->
+            <div class="tool-page">
+                <div class="header">
+                    <h2><i class="fas fa-lock"></i> Encode Sanskrit Text</h2>
+                    <p>Convert Sanskrit to encrypted numbers using Katapayadi system</p>
+                </div>
+                
+                <div class="tool-container">
+                    <div class="form-container">
+                        <div class="input-group">
+                            <div>
+                                <div class="form-group">
+                                    <label for="encode-text"><i class="fas fa-font"></i> Sanskrit Text</label>
+                                    <textarea id="encode-text" class="form-control sanskrit-text" rows="6" placeholder="Enter Sanskrit text here...">कटपयादि</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="encode-key"><i class="fas fa-key"></i> Encryption Key (0-9)</label>
+                                    <input type="range" id="encode-key-slider" min="0" max="9" value="0" class="form-control" style="width: 100%;">
+                                    <input type="number" id="encode-key" class="form-control key-input" min="0" max="9" value="0" style="width: 100px; margin-top: 10px;">
+                                    <small>Key adds security. Without correct key, decoding produces meaningless text.</small>
+                                </div>
+                                
+                                <button onclick="encodeText()" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-code"></i> Encode Text
+                                </button>
+                                
+                                <button onclick="resetEncodeForm()" class="btn" style="margin-left: 10px;">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <div id="encode-result" class="result-box" style="display: none;">
+                                    <h4><i class="fas fa-check-circle"></i> Encoded Successfully!</h4>
+                                    <div style="margin: 15px 0;">
+                                        <p><strong>Encoded Numbers:</strong></p>
+                                        <p id="encoded-output" class="blinking" style="font-size: 1.8rem; font-weight: bold; letter-spacing: 2px;"></p>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 5px;">
+                                        <p><strong>Key used:</strong> <span id="encode-key-used" style="color: var(--secondary);"></span></p>
+                                        <p><strong>Original text:</strong> <span id="encode-original" class="sanskrit-text"></span></p>
+                                    </div>
+                                    <button onclick="copyEncodedText()" class="btn" style="margin-top: 15px; width: 100%;">
+                                        <i class="fas fa-copy"></i> Copy to Clipboard
+                                    </button>
+                                </div>
+                                
+                                <!-- Katapayadi Reference -->
+                                <div class="form-container" style="margin-top: 20px; padding: 15px;">
+                                    <h4><i class="fas fa-table"></i> Quick Reference</h4>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+                                        <div class="char-item">
+                                            <div class="char-number">1</div>
+                                            <div class="char-letters">क ट प य</div>
+                                        </div>
+                                        <div class="char-item">
+                                            <div class="char-number">2</div>
+                                            <div class="char-letters">ख ठ फ र</div>
+                                        </div>
+                                        <div class="char-item">
+                                            <div class="char-number">3</div>
+                                            <div class="char-letters">ग ड ब ल</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'decode' %}
+            <!-- Decode Section -->
+            <div class="tool-page">
+                <div class="header">
+                    <h2><i class="fas fa-unlock"></i> Decode Encrypted Numbers</h2>
+                    <p>Convert numbers back to Sanskrit text with correct key</p>
+                </div>
+                
+                <div class="tool-container">
+                    <div class="form-container">
+                        <div class="input-group">
+                            <div>
+                                <div class="form-group">
+                                    <label for="decode-numbers"><i class="fas fa-hashtag"></i> Encoded Numbers</label>
+                                    <input type="text" id="decode-numbers" class="form-control" placeholder="e.g., 11614" value="11614">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="decode-key"><i class="fas fa-key"></i> Decryption Key (0-9)</label>
+                                    <input type="range" id="decode-key-slider" min="0" max="9" value="0" class="form-control" style="width: 100%;">
+                                    <input type="number" id="decode-key" class="form-control key-input" min="0" max="9" value="0" style="width: 100px; margin-top: 10px;">
+                                    <small>Must match the encryption key used for encoding</small>
+                                </div>
+                                
+                                <button onclick="decodeNumbers()" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-decode"></i> Decode Numbers
+                                </button>
+                                
+                                <button onclick="resetDecodeForm()" class="btn" style="margin-left: 10px;">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <div id="decode-result" class="result-box" style="display: none;">
+                                    <h4><i class="fas fa-check-circle"></i> Decoded Successfully!</h4>
+                                    <div style="margin: 15px 0;">
+                                        <p><strong>Decoded Sanskrit:</strong></p>
+                                        <p id="decoded-output" class="blinking sanskrit-text" style="font-size: 1.8rem; font-weight: bold;"></p>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 5px;">
+                                        <p><strong>Key used:</strong> <span id="decode-key-used" style="color: var(--secondary);"></span></p>
+                                        <p><strong>Original numbers:</strong> <span id="decode-original"></span></p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Example -->
+                                <div class="form-container" style="margin-top: 20px; padding: 15px;">
+                                    <h4><i class="fas fa-lightbulb"></i> Example</h4>
+                                    <p><strong>Numbers:</strong> 11614</p>
+                                    <p><strong>Key 0:</strong> कटपयादि</p>
+                                    <p><strong>Key 3:</strong> ञठयवञथ (meaningless with wrong key)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'system' %}
+            <!-- System Section -->
+            <div class="system-page">
+                <div class="form-container">
+                    <h2><i class="fas fa-cogs"></i> Katapayadi System Explained</h2>
+                    
+                    <!-- Image -->
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div style="border: var(--border-width) solid var(--primary); padding: 15px; background: var(--card-bg); display: inline-block;">
+                            <img src="https://www.eviolinguru.com/uploads/7/3/5/7/735729/published/melakartha-ragas.jpg?1718896338" 
+                                 alt="Katapayadi System - Melakarta Ragas" 
+                                 style="max-width: 600px; width: 100%; height: auto; border: 2px solid var(--primary);"
+                                 onerror="this.src='https://via.placeholder.com/600x400/4ECDC4/000000?text=Katapayadi+Encoding+Chart'">
+                            <p style="margin-top: 10px; color: var(--text-muted);">
+                                <i class="fas fa-image"></i> Katapayadi system used in Carnatic music Melakarta ragas classification
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <table class="katapayadi-table">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Consonants</th>
+                                <th>Sanskrit</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>क, ट, प, य</td>
+                                <td>ककारः</td>
+                                <td>क = 1</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>ख, ठ, फ, र</td>
+                                <td>खकारः</td>
+                                <td>र = 2</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>ग, ड, ब, ल</td>
+                                <td>गकारः</td>
+                                <td>ल = 3</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>घ, ढ, भ, व</td>
+                                <td>घकारः</td>
+                                <td>व = 4</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>ङ, ण, म, श</td>
+                                <td>ङकारः</td>
+                                <td>श = 5</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>च, त, ष</td>
+                                <td>चकारः</td>
+                                <td>ष = 6</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>छ, थ, स</td>
+                                <td>छकारः</td>
+                                <td>स = 7</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>ज, द, ह</td>
+                                <td>जकारः</td>
+                                <td>ह = 8</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>झ, ध, ळ</td>
+                                <td>झकारः</td>
+                                <td>झ = 9</td>
+                            </tr>
+                            <tr>
+                                <td>0</td>
+                                <td>ञ, न, क्ष, ज्ञ</td>
+                                <td>ञकारः</td>
+                                <td>ज्ञ = 0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 30px;">
+                        <h3><i class="fas fa-info-circle"></i> How it works:</h3>
+                        <ul style="padding-left: 20px; margin-top: 10px;">
+                            <li>Each Sanskrit consonant corresponds to a number (1-9, 0)</li>
+                            <li>Vowels (अ, आ, इ, etc.) act as separators</li>
+                            <li>Numbers are read from right to left in traditional system</li>
+                            <li>Encryption key (0-9) adds security layer</li>
+                            <li>Without correct key, decoded text will be meaningless</li>
+                            <li>Used historically in mathematics and Carnatic music</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'about' %}
+            <!-- About Section -->
+            <div class="about-page">
+                <div class="form-container">
+                    <h2><i class="fas fa-microscope"></i> About This Project</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0; align-items: center;">
+                        <div>
+                            <p>This web application implements the ancient Indian <strong>Katapayadi system</strong> of encoding, used historically in mathematical and astronomical texts.</p>
+                            
+                            <div class="card" style="margin-top: 20px;">
+                                <h3><i class="fas fa-code"></i> Microproject Details</h3>
+                                <p><strong>Topic:</strong> Katapayadi Encoding System Implementation</p>
+                                <p><strong>Tech Stack:</strong> Flask (Python), HTML/CSS, JavaScript</p>
+                                <p><strong>Design Theme:</strong> New Brutalism</p>
+                                <p><strong>Features:</strong> User authentication, encoding/decoding, key-based encryption, dark mode</p>
+                            </div>
+                        </div>
+                        
+                        <div style="border: var(--border-width) solid var(--primary); padding: 10px; background: var(--card-bg);">
+                            <img src="https://www.eviolinguru.com/uploads/7/3/5/7/735729/published/melakartha-ragas.jpg?1718896338" 
+                                 alt="Katapayadi System" 
+                                 style="width: 100%; height: auto; max-height: 300px; object-fit: cover; border: 2px solid var(--primary);"
+                                 onerror="this.src='https://via.placeholder.com/600x300/FF6B6B/000000?text=Katapayadi+System'">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fas fa-history"></i> Historical Significance</h3>
+                        <p>The Katapayadi system was used by ancient Indian mathematicians and astronomers like Aryabhata to encode numbers into memorable Sanskrit phrases, making complex calculations easier to remember and transmit orally.</p>
+                        <p>In Carnatic music, it's used to classify Melakarta ragas (parent musical scales).</p>
+                    </div>
+                </div>
+            </div>
+
+        {% elif page == 'admin' and current_user.username == 'admin' %}
+            <!-- Admin Section -->
+            <div class="admin-page">
+                <div class="form-container">
+                    <h2><i class="fas fa-crown"></i> Admin Panel</h2>
+                    
+                    <div class="card">
+                        <h3>Registered Users</h3>
+                        <table class="katapayadi-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>
+                                        {% if user.username == 'admin' %}
+                                        <span style="color: var(--secondary); font-weight: bold;">Administrator</span>
+                                        {% else %}
+                                        <span style="color: var(--accent);">User</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>System Statistics</h3>
+                        <p>Total Users: {{ users|length }}</p>
+                        <p>Version: 1.0.0</p>
+                        <p>Database: SQLite</p>
+                        <p>Admin: {{ current_user.username }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Katapayadi Cipher System • Ancient Indian Encoding • Microproject Implementation</p>
+            <p style="font-size: 0.9rem; margin-top: 10px;">
+                <i class="fas fa-palette"></i> <span id="theme-status">Light Mode</span> | 
+                <i class="fas fa-user"></i> {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Guest{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal for Katapayadi Image -->
+    <div id="image-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3>Katapayadi System Chart</h3>
+            <img src="https://www.eviolinguru.com/uploads/7/3/5/7/735729/published/melakartha-ragas.jpg?1718896338" 
+                 alt="Katapayadi Chart" 
+                 style="width: 100%; max-height: 70vh; object-fit: contain;">
+            <p style="text-align: center; margin-top: 10px; color: var(--text-muted);">
+                Katapayadi system used in Melakarta ragas classification
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            document.querySelector('.theme-toggle-btn i').className = 
+                newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            document.getElementById('theme-status').textContent = 
+                newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+            
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const themeBtn = document.querySelector('.theme-toggle-btn i');
+            if (themeBtn) {
+                themeBtn.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            const themeStatus = document.getElementById('theme-status');
+            if (themeStatus) {
+                themeStatus.textContent = savedTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+            }
+        }
+        
+        // Show/Hide Register Form on Login Page
+        function showRegisterForm() {
+            document.querySelector('.auth-container .form-container').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+        
+        function showLoginForm() {
+            document.querySelector('.auth-container .form-container').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+        }
+        
+        // Key slider sync
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            
+            // Sync key sliders with number inputs
+            const encodeSlider = document.getElementById('encode-key-slider');
+            const encodeInput = document.getElementById('encode-key');
+            if (encodeSlider && encodeInput) {
+                encodeSlider.addEventListener('input', function() {
+                    encodeInput.value = this.value;
+                });
+                encodeInput.addEventListener('input', function() {
+                    encodeSlider.value = this.value;
+                });
+            }
+            
+            const decodeSlider = document.getElementById('decode-key-slider');
+            const decodeInput = document.getElementById('decode-key');
+            if (decodeSlider && decodeInput) {
+                decodeSlider.addEventListener('input', function() {
+                    decodeInput.value = this.value;
+                });
+                decodeInput.addEventListener('input', function() {
+                    decodeSlider.value = this.value;
+                });
+            }
+            
+            // Auto-focus username field on login page
+            if (window.location.pathname === '/login') {
+                const usernameField = document.getElementById('username');
+                if (usernameField) {
+                    usernameField.focus();
+                }
+            }
+        });
+        
+        // Encode text
+        async function encodeText() {
+            const text = document.getElementById('encode-text').value;
+            const key = parseInt(document.getElementById('encode-key').value);
+            
+            if (!text.trim()) {
+                alert('Please enter Sanskrit text to encode');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/encode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        key: key
+                    })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('encoded-output').textContent = data.encoded;
+                document.getElementById('encode-key-used').textContent = data.key;
+                document.getElementById('encode-original').textContent = data.original;
+                document.getElementById('encode-result').style.display = 'block';
+                
+                // Scroll to result
+                document.getElementById('encode-result').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                alert('Error encoding text: ' + error.message);
+            }
+        }
+        
+        // Decode numbers
+        async function decodeNumbers() {
+            const numbers = document.getElementById('decode-numbers').value;
+            const key = parseInt(document.getElementById('decode-key').value);
+            
+            if (!numbers.trim()) {
+                alert('Please enter numbers to decode');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/decode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        numbers: numbers,
+                        key: key
+                    })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('decoded-output').textContent = data.decoded;
+                document.getElementById('decode-key-used').textContent = data.key;
+                document.getElementById('decode-original').textContent = data.original;
+                document.getElementById('decode-result').style.display = 'block';
+                
+                // Scroll to result
+                document.getElementById('decode-result').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                alert('Error decoding numbers: ' + error.message);
+            }
+        }
+        
+        // Reset forms
+        function resetEncodeForm() {
+            document.getElementById('encode-text').value = 'कटपयादि';
+            document.getElementById('encode-key').value = 0;
+            document.getElementById('encode-key-slider').value = 0;
+            document.getElementById('encode-result').style.display = 'none';
+        }
+        
+        function resetDecodeForm() {
+            document.getElementById('decode-numbers').value = '11614';
+            document.getElementById('decode-key').value = 0;
+            document.getElementById('decode-key-slider').value = 0;
+            document.getElementById('decode-result').style.display = 'none';
+        }
+        
+        // Copy to clipboard
+        function copyEncodedText() {
+            const encodedText = document.getElementById('encoded-output').textContent;
+            navigator.clipboard.writeText(encodedText).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+        
+        // Modal functions
+        function showKatapayadiImage() {
+            document.getElementById('image-modal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+        
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('image-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 20px;
+            border: var(--border-width) solid var(--primary);
+            width: 80%;
+            max-width: 900px;
+            position: relative;
+        }
+        
+        .close-modal {
+            color: var(--primary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-modal:hover {
+            color: var(--secondary);
+        }
+        
+        /* Auth Page */
+        .auth-page {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Feature Icon */
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        /* Quick Guide */
+        .quick-guide {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--table-row-even);
+            border: 2px solid var(--primary);
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            margin: 30px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .hero-section .form-container > div {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+    </style>
+</body>
+</html>
